@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="UMICH Ice Fishing Club: cold-weather angling at the University of Michigan.">
+<style>
+  body { margin: 0; }
+  img, svg { max-width: 100%; }
+</style>
+<title>UMICH Ice Fishing Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    /* Layout: one left-aligned column that reads like a descent from the lake surface to the lakebed; a 3D shard field sits fixed behind it and a depth readout tracks the scroll. */
+    --night: #06101b;
+    --deep: #0c1f33;
+    --glow: rgba(96, 170, 214, 0.28);
+    --bar: rgba(6, 16, 27, 0.78);
+    --panel: rgba(12, 31, 51, 0.62);
+    --line: rgba(150, 200, 228, 0.18);
+    --line-strong: rgba(150, 200, 228, 0.36);
+    --ice: #e4f1f8;
+    --frost: #9cb5c6;
+    --glacier: #86d3f2;
+    --maize: #ffcb05;
+    --on-maize: #06101b;
+    --danger: #ff8f7e;
+
+    --f-display: "Big Shoulders Display", "Barlow Condensed", "Arial Narrow", sans-serif;
+    --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+    --gutter: 20px;
+    --measure: 36rem;
+    color-scheme: dark;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--night);
+    color: var(--ice);
+    font-family: var(--f-body);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--glacier); color: var(--night); }
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--maize); outline-offset: 3px; border-radius: 4px; }
+
+  /* Background layers */
+  .sky {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(110% 60% at 75% -5%, var(--glow), transparent 62%),
+      linear-gradient(180deg, var(--deep) 0%, var(--night) 72%);
+  }
+  #scene { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.9; }
+  #scene canvas { display: block; }
+
+  .page { position: relative; z-index: 2; }
+  .wrap { max-width: 68rem; margin-inline: auto; padding-inline: var(--gutter); }
+
+  /* Nav */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) var(--gutter) 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: var(--bar);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand svg { width: 22px; height: 22px; flex: none; }
+  .brand span {
+    font-family: var(--f-display); font-weight: 800; font-size: 1.3rem;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--ice); line-height: 1;
+  }
+  .nav-links { display: flex; align-items: center; gap: 22px; }
+  .nav-links a {
+    font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--frost); text-decoration: none; transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--ice); }
+  .nav-links .nav-cta {
+    color: var(--ice); border: 1px solid var(--line-strong); padding: 7px 14px; border-radius: 999px;
+  }
+  .nav-links .nav-cta:hover { border-color: var(--glacier); }
+  @media (max-width: 640px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  /* Hero */
+  .hero { padding-block: calc(env(safe-area-inset-top, 0px) + 8.5rem) 4.5rem; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 1.4rem;
+    font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--glacier);
+  }
+  .eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--glacier); }
+  .hero-title {
+    margin: 0; font-family: var(--f-display); font-weight: 900; text-transform: uppercase;
+    font-size: clamp(4.2rem, 17vw, 11rem); line-height: 0.84; letter-spacing: 0.005em;
+    display: flex; flex-direction: column;
+  }
+  .hero-title .solid {
+    background: linear-gradient(180deg, var(--ice) 30%, var(--glacier) 120%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero-title .outline {
+    color: transparent; -webkit-text-stroke: 0.018em var(--glacier);
+  }
+  .iceline {
+    margin-top: 2rem; display: flex; align-items: center; gap: 14px;
+    font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--frost);
+  }
+  .iceline::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-strong), transparent); }
+  .lede { max-width: var(--measure); margin: 1.4rem 0 0; font-size: clamp(1.08rem, 2.1vw, 1.25rem); color: var(--ice); opacity: 0.88; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 2rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer;
+    font: 600 0.95rem/1 var(--f-body); letter-spacing: 0.02em;
+    padding: 14px 20px; border-radius: 8px; border: 1px solid transparent; transition: transform .2s, background .2s, border-color .2s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-maize { background: var(--maize); color: var(--on-maize); }
+  .btn-ghost { border-color: var(--line-strong); color: var(--ice); }
+  .btn-ghost:hover { border-color: var(--glacier); }
+
+  @keyframes rise { from { transform: translateY(18px); opacity: 0.35; } to { transform: none; opacity: 1; } }
+  .hero > * { animation: rise .9s cubic-bezier(.2,.7,.2,1) both; }
+  .hero > :nth-child(2) { animation-delay: .06s; }
+  .hero > :nth-child(3) { animation-delay: .14s; }
+  .hero > :nth-child(4) { animation-delay: .2s; }
+  .hero > :nth-child(5) { animation-delay: .26s; }
+
+  /* Sections */
+  .section { padding-block: clamp(4rem, 9vw, 6.5rem); border-top: 1px solid var(--line); scroll-margin-top: 4.5rem; }
+  .kicker {
+    margin: 0 0 0.9rem; font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--glacier);
+  }
+  h2 {
+    margin: 0; font-family: var(--f-display); font-weight: 800; text-transform: uppercase;
+    font-size: clamp(2.3rem, 5.6vw, 3.8rem); line-height: 0.95; letter-spacing: 0.01em; text-wrap: balance;
+  }
+  p { margin: 0; }
+  .body-copy { max-width: var(--measure); color: var(--frost); margin-top: 1.25rem; }
+  .body-copy strong { color: var(--ice); font-weight: 600; }
+
+  /* Mission */
+  .mission { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(2rem, 6vw, 5rem); align-items: start; }
+  .focus { list-style: none; margin: 0; padding: 0; display: grid; }
+  .focus li { padding-block: 1.15rem; border-top: 1px solid var(--line); display: grid; gap: 4px; }
+  .focus li:last-child { border-bottom: 1px solid var(--line); }
+  .focus h3 {
+    margin: 0; font-family: var(--f-display); font-weight: 800; font-size: 1.65rem;
+    text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.05;
+  }
+  .focus p { color: var(--frost); font-size: 0.98rem; }
+  .welcome {
+    margin-top: 1.75rem; display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ice);
+  }
+  .welcome::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--maize); }
+
+  /* Safety */
+  .safety { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(2rem, 6vw, 5rem); align-items: start; }
+  .ice-types { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: 10px; max-width: var(--measure); }
+  .ice-types li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .swatch { width: 34px; height: 22px; border-radius: 4px; border: 1px solid var(--line-strong); }
+  .sw-clear { background: linear-gradient(135deg, #2b6f99, #7cc6ea); }
+  .sw-milky { background: linear-gradient(135deg, #b7c6cf, #e6ecef); }
+  .sw-snow { background: repeating-linear-gradient(45deg, #f4f8fa 0 4px, #dbe5ea 4px 8px); }
+  .ice-types .name { color: var(--ice); font-size: 0.98rem; }
+  .verdict { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .v-good { color: var(--glacier); }
+  .v-bad { color: var(--danger); }
+  .gear { margin-top: 1.75rem; max-width: var(--measure); color: var(--frost); }
+  .gear strong { color: var(--ice); }
+
+  .gauge { margin: 0; padding: 1.5rem; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+  .gauge-title { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--frost); margin-bottom: 1.25rem; }
+  .gauge-body { position: relative; display: grid; grid-template-columns: 2rem 3.25rem minmax(0, 1fr); column-gap: 10px; height: 25rem; }
+  .ticks, .marks { list-style: none; margin: 0; padding: 0; position: relative; }
+  .ticks li {
+    position: absolute; right: 0; top: calc(var(--at) / 14 * 100%); transform: translateY(-50%);
+    font-family: var(--f-mono); font-size: 0.68rem; color: var(--frost); font-variant-numeric: tabular-nums;
+  }
+  .core {
+    position: relative; border-radius: 4px; overflow: hidden; border: 1px solid var(--line-strong);
+    background:
+      repeating-linear-gradient(180deg, transparent 0, transparent calc(100% / 14 - 1px), rgba(6,16,27,.35) calc(100% / 14 - 1px), rgba(6,16,27,.35) calc(100% / 14)),
+      linear-gradient(180deg, #f2f8fb 0 3%, #9fd3ec 3%, #4f9dc7 60%, #2a6d97 100%);
+  }
+  .core .zone {
+    position: absolute; left: 0; right: 0; top: 0; height: calc(4 / 14 * 100%);
+    background: repeating-linear-gradient(-45deg, rgba(255,143,126,.55) 0 5px, rgba(255,143,126,.15) 5px 10px);
+    border-bottom: 2px solid var(--danger);
+  }
+  .marks li {
+    position: absolute; left: 0; right: 0; top: calc(var(--at) / 14 * 100%); transform: translateY(-50%);
+    display: flex; align-items: baseline; gap: 8px; font-size: 0.9rem; line-height: 1.2; white-space: nowrap;
+  }
+  .marks li::before { content: ""; align-self: center; width: 14px; height: 1px; background: var(--line-strong); flex: none; }
+  .marks b { font-family: var(--f-mono); font-weight: 500; font-size: 0.8rem; color: var(--glacier); font-variant-numeric: tabular-nums; }
+  .marks span { color: var(--ice); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .marks .warn b, .marks .warn span { color: var(--danger); }
+  .gauge figcaption { margin-top: 1.25rem; font-size: 0.85rem; color: var(--frost); line-height: 1.55; }
+  .gauge figcaption a { color: var(--glacier); text-underline-offset: 3px; }
+
+  /* Gallery */
+  .gallery-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; }
+  .gallery-head .body-copy { margin-top: 0; max-width: 26rem; }
+  .gallery { margin-top: 2.5rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .shot { margin: 0; display: grid; gap: 12px; }
+  .shot .frame { border-radius: 10px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 10; max-width: 100%; transition: border-color .3s; }
+  .shot:hover .frame { border-color: var(--line-strong); }
+  .shot svg { display: block; width: 100%; height: 100%; }
+  .shot figcaption { font-family: var(--f-display); font-weight: 800; font-size: 1.35rem; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.1; }
+
+  /* Contact */
+  .contact { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(2rem, 6vw, 5rem); align-items: end; }
+  .leader-name { margin-top: 1.25rem; font-family: var(--f-display); font-weight: 900; font-size: clamp(2.6rem, 7vw, 4.6rem); line-height: .9; text-transform: uppercase; color: var(--glacier); }
+  .leader-role { margin-top: .6rem; font-family: var(--f-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--frost); }
+  .email-card { padding: 1.5rem; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+  .email-label { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--frost); }
+  .email-text { display: block; margin-top: .5rem; font-family: var(--f-mono); font-size: clamp(1rem, 3.4vw, 1.3rem); color: var(--ice); overflow-wrap: anywhere; user-select: all; }
+  .email-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1.25rem; }
+  .email-actions .btn { padding: 12px 18px; }
+  button.btn { border: 1px solid transparent; }
+  .copy-status { min-height: 1.4em; margin-top: .75rem; font-size: .85rem; color: var(--glacier); }
+
+  /* Footer */
+  .foot { border-top: 1px solid var(--line); padding-block: 2rem 3.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem 2rem; font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--frost); }
+  .foot a { color: var(--frost); text-underline-offset: 3px; }
+  .foot a:hover { color: var(--ice); }
+
+  /* Depth readout */
+  .depth {
+    position: fixed; z-index: 20; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); pointer-events: none;
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px;
+    background: var(--bar); border: 1px solid var(--line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    font-family: var(--f-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--frost);
+    font-variant-numeric: tabular-nums;
+  }
+  .depth b { color: var(--ice); font-weight: 500; min-width: 4ch; text-align: right; }
+  .depth svg { width: 10px; height: 10px; }
+
+  @media (max-width: 860px) {
+    .mission, .safety, .contact { grid-template-columns: minmax(0, 1fr); }
+    .gallery { grid-template-columns: minmax(0, 1fr); max-width: 34rem; }
+    .gauge-body { height: 22rem; }
+  }
+  @media (max-width: 640px) {
+    .depth { display: none; }
+    .hero { padding-block: calc(env(safe-area-inset-top, 0px) + 7rem) 3.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero > * { animation: none; }
+    .btn, .shot .frame { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+
+<div class="sky" aria-hidden="true"></div>
+<div id="scene" aria-hidden="true"></div>
+
+<nav class="nav" aria-label="Main">
+  <a class="brand" href="#top" aria-label="UMICH Ice Fishing, back to top">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#86d3f2" stroke-width="1.6" stroke-linecap="round">
+      <g id="arm"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="9,4.5 12,7 15,4.5"/><polyline points="9,19.5 12,17 15,19.5"/></g>
+      <use href="#arm" transform="rotate(60 12 12)"/>
+      <use href="#arm" transform="rotate(120 12 12)"/>
+    </svg>
+    <span>UMICH Ice Fishing</span>
+  </a>
+  <div class="nav-links">
+    <a href="#mission">Mission</a>
+    <a href="#safety">Safety</a>
+    <a href="#gallery">Gallery</a>
+    <a class="nav-cta" href="#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="page">
+  <header class="hero wrap" id="top">
+    <p class="eyebrow">University of Michigan · Hard-water season</p>
+    <h1 class="hero-title"><span class="solid">Conquer</span><span class="outline">the Ice</span></h1>
+    <div class="iceline" aria-hidden="true">Ice line · 0.0 ft</div>
+    <p class="lede">The premier community for cold-weather angling at the University of Michigan. Braving the frozen lakes, tracking the catch, and building unforgettable camaraderie.</p>
+    <div class="actions">
+      <a class="btn btn-maize" href="#contact">Get in touch</a>
+      <a class="btn btn-ghost" href="#safety">Read the ice first</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" id="mission" aria-labelledby="mission-h">
+      <div class="wrap mission">
+        <div>
+          <p class="kicker">Who we are</p>
+          <h2 id="mission-h">The Mission</h2>
+          <p class="body-copy">Our club brings together outdoor enthusiasts looking to experience <strong>Michigan's winter wilderness</strong>. From setup strategies, ice safety, to advanced sonar fishing patterns, we welcome rookies and seasoned anglers alike.</p>
+          <p class="welcome">Rookies and seasoned anglers welcome</p>
+        </div>
+        <ul class="focus">
+          <li><h3>Setup strategies</h3><p>Shelters, holes and rigs in place before the bite starts.</p></li>
+          <li><h3>Ice safety</h3><p>Test as you go, carry picks, and never fish alone.</p></li>
+          <li><h3>Sonar fishing patterns</h3><p>Reading the flasher to find fish and keep them interested.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="safety" aria-labelledby="safety-h">
+      <div class="wrap safety">
+        <div>
+          <p class="kicker">Before every trip</p>
+          <h2 id="safety-h">Read the ice first</h2>
+          <p class="body-copy">The Michigan DNR is clear that <strong>no inch count makes ice safe</strong>. Check it yourself with a spud as you walk out, and turn back if anything looks wrong.</p>
+          <ul class="ice-types">
+            <li><span class="swatch sw-clear" aria-hidden="true"></span><span class="name">Clear, with a blue tint</span><span class="verdict v-good">Strongest</span></li>
+            <li><span class="swatch sw-milky" aria-hidden="true"></span><span class="name">Milky, refrozen snow</span><span class="verdict v-bad">Weak</span></li>
+            <li><span class="swatch sw-snow" aria-hidden="true"></span><span class="name">Snow-covered</span><span class="verdict v-bad">Treat as unsafe</span></li>
+          </ul>
+          <p class="gear">Carry every trip: <strong>ice picks or claws</strong>, a <strong>life jacket</strong>, and a <strong>spud</strong> to test ahead of you.</p>
+        </div>
+        <figure class="gauge" aria-labelledby="gauge-cap">
+          <div class="gauge-title">Clear-ice thickness guide</div>
+          <div class="gauge-body">
+            <ol class="ticks" aria-hidden="true">
+              <li style="--at:0">0"</li><li style="--at:2">2"</li><li style="--at:4">4"</li><li style="--at:6">6"</li>
+              <li style="--at:8">8"</li><li style="--at:10">10"</li><li style="--at:12">12"</li><li style="--at:14">14"</li>
+            </ol>
+            <div class="core" aria-hidden="true"><div class="zone"></div></div>
+            <ol class="marks">
+              <li class="warn" style="--at:2"><b>&lt;4 in</b><span>Stay off</span></li>
+              <li style="--at:4"><b>4 in</b><span>On foot, fishing</span></li>
+              <li style="--at:5.5"><b>5–6 in</b><span>Snowmobile, ATV</span></li>
+              <li style="--at:9"><b>8–10 in</b><span>Car</span></li>
+              <li style="--at:13"><b>12–14 in</b><span>Truck</span></li>
+            </ol>
+          </div>
+          <figcaption id="gauge-cap">Minimums for new, solid, clear ice from the <a href="https://www.dnr.state.mn.us/safety/ice/ice-thickness-guidelines-weight.html">Minnesota DNR</a>. Milky or snow-covered ice is weaker. See the <a href="https://www.michigan.gov/dnr/education/safety-info/ice">Michigan DNR ice safety page</a> before heading out.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="gallery" aria-labelledby="gallery-h">
+      <div class="wrap">
+        <div class="gallery-head">
+          <div>
+            <p class="kicker">On the ice</p>
+            <h2 id="gallery-h">Michigan Winter Angling</h2>
+          </div>
+          <p class="body-copy">A day on hard water, from first light to the first fish through the hole.</p>
+        </div>
+        <div class="gallery">
+          <figure class="shot">
+            <div class="frame">
+              <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Pop-up ice shelters on a frozen lake at dusk">
+                <defs>
+                  <linearGradient id="g1sky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#081629"/><stop offset=".65" stop-color="#23415f"/><stop offset="1" stop-color="#7390a8"/>
+                  </linearGradient>
+                  <linearGradient id="g1ice" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#a9c6d8"/><stop offset="1" stop-color="#e9f4fa"/>
+                  </linearGradient>
+                  <radialGradient id="g1lamp" cx=".5" cy=".5" r=".5">
+                    <stop offset="0" stop-color="#ffcb05" stop-opacity=".75"/><stop offset="1" stop-color="#ffcb05" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <rect width="320" height="200" fill="url(#g1sky)"/>
+                <g fill="#e4f1f8">
+                  <circle cx="24" cy="22" r="1"/><circle cx="62" cy="40" r=".8"/><circle cx="98" cy="16" r="1.2"/><circle cx="150" cy="34" r=".8"/>
+                  <circle cx="196" cy="14" r="1"/><circle cx="238" cy="44" r=".9"/><circle cx="276" cy="20" r="1.2"/><circle cx="304" cy="52" r=".8"/>
+                  <circle cx="126" cy="60" r=".7"/><circle cx="220" cy="70" r=".7"/>
+                </g>
+                <circle cx="262" cy="36" r="9" fill="#e4f1f8" opacity=".9"/>
+                <polygon fill="#0b1a2a" points="0,124 0,112 10,104 18,112 26,98 34,110 44,100 54,112 64,102 74,113 86,106 98,114 112,108 126,116 150,112 176,117 200,110 214,103 226,111 238,99 250,109 262,101 274,110 288,104 300,112 312,106 320,110 320,124"/>
+                <rect y="123" width="320" height="77" fill="url(#g1ice)"/>
+                <path d="M0 140 L320 136" stroke="#ffffff" stroke-opacity=".35" stroke-width="1"/>
+                <path d="M0 170 L320 164" stroke="#8fb3c8" stroke-opacity=".35" stroke-width="1"/>
+                <ellipse cx="108" cy="158" rx="46" ry="6" fill="#4e6d82" opacity=".35"/>
+                <polygon points="66,156 76,118 130,118 138,156" fill="#ffcb05"/>
+                <polygon points="130,118 138,156 154,151 146,121" fill="#c79d00"/>
+                <line x1="102" y1="122" x2="102" y2="156" stroke="#9a7900" stroke-width="1.5"/>
+                <circle cx="102" cy="146" r="16" fill="url(#g1lamp)"/>
+                <ellipse cx="226" cy="154" rx="38" ry="5" fill="#4e6d82" opacity=".35"/>
+                <path d="M194 152 Q198 116 236 114 L252 114 L252 152 Z" fill="#2d6187"/>
+                <rect x="190" y="150" width="66" height="5" rx="2" fill="#12283d"/>
+                <path d="M200 146 Q204 122 234 120" stroke="#86d3f2" stroke-opacity=".5" stroke-width="1.2" fill="none"/>
+                <ellipse cx="170" cy="176" rx="7" ry="2.4" fill="#18344c"/>
+                <ellipse cx="282" cy="168" rx="6" ry="2" fill="#18344c"/>
+                <ellipse cx="40" cy="182" rx="8" ry="2.8" fill="#18344c"/>
+              </svg>
+            </div>
+            <figcaption>Setting up the shelters</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <div class="frame">
+              <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A line of holes drilled across a drop-off, with a tip-up flag raised on one">
+                <defs>
+                  <linearGradient id="g2sky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#9dbbd0"/><stop offset="1" stop-color="#d6e6ef"/>
+                  </linearGradient>
+                  <linearGradient id="g2ice" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#d2e3ec"/><stop offset="1" stop-color="#f1f7fa"/>
+                  </linearGradient>
+                  <radialGradient id="g2water" cx=".5" cy=".4" r=".6">
+                    <stop offset="0" stop-color="#1d4d6e"/><stop offset="1" stop-color="#061523"/>
+                  </radialGradient>
+                </defs>
+                <rect width="320" height="200" fill="url(#g2ice)"/>
+                <rect width="320" height="46" fill="url(#g2sky)"/>
+                <polygon fill="#5d7688" points="0,46 0,38 20,34 44,39 70,31 96,37 124,33 150,40 180,35 210,39 240,32 268,37 296,33 320,38 320,46"/>
+                <path d="M30 186 C 90 160, 140 128, 280 70" stroke="#8fb0c3" stroke-width="1.2" stroke-dasharray="3 5" fill="none"/>
+                <g font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" fill="#3c5a70" letter-spacing=".5">
+                  <g transform="translate(58 170)">
+                    <ellipse rx="24" ry="9" fill="#bcd2df"/><ellipse rx="15" ry="5.6" fill="url(#g2water)"/>
+                    <text x="30" y="3">6 FT</text>
+                  </g>
+                  <g transform="translate(118 140)">
+                    <ellipse rx="20" ry="7.5" fill="#bcd2df"/><ellipse rx="12.5" ry="4.7" fill="url(#g2water)"/>
+                    <text x="26" y="3">9 FT</text>
+                  </g>
+                  <g transform="translate(172 114)">
+                    <ellipse rx="17" ry="6.4" fill="#bcd2df"/><ellipse rx="10.5" ry="4" fill="url(#g2water)"/>
+                    <line x1="0" y1="0" x2="0" y2="-34" stroke="#2f4658" stroke-width="1.6"/>
+                    <polygon points="0,-34 17,-29 0,-24" fill="#ff7a45"/>
+                    <text x="22" y="3">12 FT</text>
+                  </g>
+                  <g transform="translate(220 92)">
+                    <ellipse rx="14" ry="5.3" fill="#bcd2df"/><ellipse rx="8.7" ry="3.3" fill="url(#g2water)"/>
+                    <text x="19" y="3">15 FT</text>
+                  </g>
+                  <g transform="translate(262 74)">
+                    <ellipse rx="11.5" ry="4.4" fill="#bcd2df"/><ellipse rx="7.2" ry="2.7" fill="url(#g2water)"/>
+                    <text x="16" y="3">18 FT</text>
+                  </g>
+                </g>
+              </svg>
+            </div>
+            <figcaption>Drilling active holes</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <div class="frame">
+              <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Cross-section of the ice with a yellow perch rising to a jig below the hole">
+                <defs>
+                  <linearGradient id="g3water" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#1f5578"/><stop offset=".55" stop-color="#0e2c45"/><stop offset="1" stop-color="#050f1a"/>
+                  </linearGradient>
+                  <linearGradient id="g3shaft" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#e4f1f8" stop-opacity=".22"/><stop offset="1" stop-color="#e4f1f8" stop-opacity="0"/>
+                  </linearGradient>
+                  <clipPath id="g3body"><ellipse cx="0" cy="0" rx="34" ry="11.5"/></clipPath>
+                </defs>
+                <rect width="320" height="200" fill="url(#g3water)"/>
+                <polygon points="150,40 170,40 214,200 106,200" fill="url(#g3shaft)"/>
+                <rect x="0" y="0" width="150" height="12" fill="#eef6fa"/>
+                <rect x="170" y="0" width="150" height="12" fill="#eef6fa"/>
+                <rect x="0" y="12" width="150" height="28" fill="#8cc4df"/>
+                <rect x="170" y="12" width="150" height="28" fill="#8cc4df"/>
+                <path d="M0 22 H150 M170 26 H320 M0 32 H150 M170 34 H320" stroke="#c7e6f4" stroke-opacity=".6" stroke-width="1"/>
+                <line x1="160" y1="0" x2="160" y2="128" stroke="#e4f1f8" stroke-width="1"/>
+                <ellipse cx="160" cy="131" rx="3.4" ry="4.4" fill="#ffcb05"/>
+                <g transform="translate(206 142) rotate(-8)">
+                  <polygon points="30,0 50,-12 46,0 50,12" fill="#c9a431"/>
+                  <polygon points="-8,-10 4,-22 20,-12" fill="#6d6a2c"/>
+                  <polygon points="8,-10 16,-18 28,-9" fill="#8b8a38"/>
+                  <ellipse cx="0" cy="0" rx="34" ry="11.5" fill="#d8b53c"/>
+                  <g clip-path="url(#g3body)" fill="#39461f" opacity=".75">
+                    <rect x="-20" y="-14" width="5" height="20"/><rect x="-9" y="-14" width="5" height="22"/>
+                    <rect x="2" y="-14" width="5" height="22"/><rect x="13" y="-14" width="5" height="20"/>
+                    <rect x="23" y="-14" width="4" height="16"/>
+                  </g>
+                  <ellipse cx="0" cy="5" rx="30" ry="5" fill="#f1dc8a" opacity=".6"/>
+                  <polygon points="-6,9 -2,19 4,10" fill="#f08a3c"/>
+                  <polygon points="10,9 16,17 20,9" fill="#f08a3c"/>
+                  <circle cx="-24" cy="-3" r="3" fill="#10202c"/><circle cx="-25" cy="-4" r="1" fill="#e4f1f8"/>
+                </g>
+                <g fill="#86d3f2" opacity=".5"><circle cx="178" cy="118" r="1.6"/><circle cx="182" cy="104" r="1.2"/><circle cx="176" cy="92" r="1"/></g>
+                <path d="M0 200 L0 186 Q40 178 90 184 T190 180 T320 188 L320 200 Z" fill="#081a14"/>
+                <g stroke="#2a6048" stroke-width="2" fill="none" stroke-linecap="round">
+                  <path d="M34 186 Q28 168 36 150"/><path d="M42 186 Q48 170 42 156"/>
+                  <path d="M270 188 Q262 170 272 154"/><path d="M280 188 Q286 172 280 160"/>
+                </g>
+              </svg>
+            </div>
+            <figcaption>The prize under the ice</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact" aria-labelledby="contact-h">
+      <div class="wrap contact">
+        <div>
+          <p class="kicker">Get in touch</p>
+          <h2 id="contact-h">Club Leadership</h2>
+          <p class="leader-name">Tyler Piesman</p>
+          <p class="leader-role">Founder &amp; President</p>
+        </div>
+        <div class="email-card">
+          <div class="email-label">Email the club</div>
+          <span class="email-text" id="email-text">tpiesman@umich.edu</span>
+          <div class="email-actions">
+            <button class="btn btn-maize" type="button" id="copy-email">Copy address</button>
+            <a class="btn btn-ghost" href="mailto:tpiesman@umich.edu">Open email app</a>
+          </div>
+          <p class="copy-status" id="copy-status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <span>UMICH Ice Fishing Club</span>
+    <span>Ice safety: <a href="https://www.michigan.gov/dnr/education/safety-info/ice">Michigan DNR</a> · <a href="https://www.dnr.state.mn.us/safety/ice/index.html">Minnesota DNR</a></span>
+  </footer>
+</div>
+
+<div class="depth" aria-hidden="true">
+  <svg viewBox="0 0 10 10"><polygon points="0,2 10,2 5,9" fill="#86d3f2"/></svg>
+  Depth <b id="depth-val">0.0</b> ft
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  /* Contact: copy address */
+  var copyBtn = document.getElementById('copy-email');
+  var emailText = document.getElementById('email-text');
+  var status = document.getElementById('copy-status');
+  var resetTimer;
+  function selectEmail() {
+    var range = document.createRange();
+    range.selectNodeContents(emailText);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    status.textContent = 'Address selected. Press Ctrl+C or ⌘C to copy it.';
+  }
+  copyBtn.addEventListener('click', function () {
+    var value = emailText.textContent.trim();
+    function done() {
+      copyBtn.textContent = 'Copied';
+      status.textContent = 'Copied ' + value;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(function () { copyBtn.textContent = 'Copy address'; status.textContent = ''; }, 2200);
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(done, selectEmail);
+      } else {
+        selectEmail();
+      }
+    } catch (e) { selectEmail(); }
+  });
+
+  /* Scroll depth: drives the readout, the surface glow and the 3D camera */
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var depthVal = document.getElementById('depth-val');
+  var sky = document.querySelector('.sky');
+  var MAX_DEPTH_FT = 32;
+  var progress = 0;
+  function readScroll() {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    depthVal.textContent = (progress * MAX_DEPTH_FT).toFixed(1);
+    sky.style.opacity = String(1 - progress * 0.8);
+  }
+  window.addEventListener('scroll', readScroll, { passive: true });
+  readScroll();
+
+  /* Three.js: ice sheet, drifting shards and suspended particles */
+  if (typeof THREE === 'undefined') return;
+  var container = document.getElementById('scene');
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  } catch (e) { return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  container.appendChild(renderer.domElement);
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x06101b, 0.05);
+  var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 120);
+  var SURFACE_Y = 2.4, DESCENT = 30;
+  camera.position.set(0, SURFACE_Y, 12);
+  camera.rotation.x = -0.14;
+
+  var sheet = new THREE.Mesh(
+    new THREE.PlaneGeometry(90, 90, 45, 45),
+    new THREE.MeshBasicMaterial({ color: 0x86d3f2, wireframe: true, transparent: true, opacity: 0.09 })
+  );
+  sheet.rotation.x = -Math.PI / 2;
+  scene.add(sheet);
+
+  var shardGeo = new THREE.OctahedronGeometry(1, 0);
+  var shardMat = new THREE.MeshBasicMaterial({ color: 0x86d3f2, wireframe: true, transparent: true, opacity: 0.3 });
+  var shards = [];
+  for (var i = 0; i < 70; i++) {
+    var m = new THREE.Mesh(shardGeo, shardMat);
+    var s = 0.35 + Math.random() * 0.75;
+    m.scale.set(s * 0.45, s * 1.8, s * 0.45);
+    m.position.set((Math.random() - 0.5) * 36, -0.8 - Math.random() * 36, 4 - Math.random() * 24);
+    m.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    m.userData = { baseY: m.position.y, spin: 0.001 + Math.random() * 0.003, phase: Math.random() * Math.PI * 2 };
+    scene.add(m);
+    shards.push(m);
+  }
+
+  var COUNT = 700, TOP = 8, BOTTOM = -38;
+  var pos = new Float32Array(COUNT * 3);
+  for (var j = 0; j < COUNT; j++) {
+    pos[j * 3] = (Math.random() - 0.5) * 40;
+    pos[j * 3 + 1] = BOTTOM + Math.random() * (TOP - BOTTOM);
+    pos[j * 3 + 2] = (Math.random() - 0.5) * 30;
+  }
+  var pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var flakes = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    color: 0xe4f1f8, size: 0.06, transparent: true, opacity: 0.55, depthWrite: false
+  }));
+  scene.add(flakes);
+
+  var pointerX = 0;
+  window.addEventListener('pointermove', function (e) {
+    pointerX = (e.clientX / window.innerWidth - 0.5) * 2;
+  }, { passive: true });
+
+  window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    readScroll();
+  });
+
+  function frame(now) {
+    var t = now * 0.001;
+    var targetY = SURFACE_Y - progress * DESCENT;
+    if (reduceMotion) {
+      camera.position.y = targetY;
+    } else {
+      camera.position.y += (targetY - camera.position.y) * 0.07;
+      camera.position.x += (pointerX * 0.8 - camera.position.x) * 0.03;
+      for (var k = 0; k < shards.length; k++) {
+        var sh = shards[k];
+        sh.rotation.y += sh.userData.spin;
+        sh.position.y = sh.userData.baseY + Math.sin(t * 0.6 + sh.userData.phase) * 0.25;
+      }
+      var arr = pGeo.attributes.position.array;
+      for (var n = 1; n < arr.length; n += 3) {
+        arr[n] -= 0.006;
+        if (arr[n] < BOTTOM) arr[n] = TOP;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
